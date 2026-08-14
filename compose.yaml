@@ -23,6 +23,7 @@ services:
     container_name: ecommerce-api
 
     environment:
+      API_SECURITY_TOKEN_SECRET: ${API_SECURITY_TOKEN_SECRET}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
