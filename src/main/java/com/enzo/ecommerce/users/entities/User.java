@@ -37,8 +37,8 @@ public class User implements UserDetails {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(nullable = false)
-    private String username;
+    @Column(name = "display_name", nullable = false)
+    private String displayname;
 
     @Column(nullable = false)
     private boolean active = true;
@@ -66,10 +66,10 @@ public class User implements UserDetails {
         roles.add(userRole);
     }
 
-    public User(String email, String passwordHash, String username) {
+    public User(String email, String passwordHash, String displayname) {
         this.email = email;
         this.passwordHash = passwordHash;
-        this.username = username;
+        this.displayname = displayname;
     }
 
     @Override

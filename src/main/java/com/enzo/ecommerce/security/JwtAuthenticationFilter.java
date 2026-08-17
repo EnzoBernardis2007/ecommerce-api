@@ -1,6 +1,7 @@
 package com.enzo.ecommerce.security;
 
-import com.auth0.jwt.interfaces.DecodedJWT;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -30,16 +32,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+
         String token = recoverToken(request);
 
         if (token != null) {
-            DecodedJWT decodedJwt = tokenService.validateAndDecodeToken(token);
+            try {
+                Claims claims = tokenService.validateAndGetClaims(token);
 
-            if (decodedJwt != null) {
-                String email = decodedJwt.getSubject();
-                List<String> roles = decodedJwt.getClaim("roles").asList(String.class);
+                String email = claims.getSubject();
 
-                var authorities = roles.stream()
+                List<String> roles = claims.get("roles", List.class);
+
+                var authorities = roles == null
+                        ? Collections.<SimpleGrantedAuthority>emptyList()
+                        : roles.stream()
                         .map(SimpleGrantedAuthority::new)
                         .toList();
 
@@ -49,9 +55,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         authorities
                 );
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(authentication);
+
+            } catch (JwtException | IllegalArgumentException e) {
+                SecurityContextHolder.clearContext();
             }
         }
 
@@ -59,10 +73,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String recoverToken(HttpServletRequest request) {
+
         String authHeader = request.getHeader("Authorization");
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return null;
         }
+
         return authHeader.substring(7).trim();
     }
 }
