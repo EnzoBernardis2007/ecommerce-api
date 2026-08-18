@@ -15,7 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
+public class CustomAuthenticationEntryPoint
+        implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
 
@@ -30,17 +31,28 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             AuthenticationException authException
     ) throws IOException, ServletException {
 
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setContentType(
+                MediaType.APPLICATION_JSON_VALUE
+        );
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setStatus(
+                HttpServletResponse.SC_UNAUTHORIZED
+        );
 
         Map<String, Object> body = new HashMap<>();
+
         body.put("timestamp", Instant.now().toString());
         body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
         body.put("error", "Unauthorized");
-        body.put("message", "Acesso não autorizado. O token JWT é ausente, inválido ou expirado.");
+        body.put(
+                "message",
+                "Acesso não autorizado. O token JWT é ausente, inválido ou expirado."
+        );
         body.put("path", request.getServletPath());
 
-        objectMapper.writeValue(response.getOutputStream(), body);
+        objectMapper.writeValue(
+                response.getOutputStream(),
+                body
+        );
     }
 }

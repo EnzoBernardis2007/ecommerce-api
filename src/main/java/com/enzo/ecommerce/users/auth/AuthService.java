@@ -10,9 +10,9 @@ import com.enzo.ecommerce.users.repositories.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -20,9 +20,11 @@ import java.time.temporal.ChronoUnit;
 @Service
 public class AuthService {
 
+    private static final long REFRESH_TOKEN_EXPIRATION_DAYS = 30;
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PasswordEncoder encoder;
+    private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -31,16 +33,15 @@ public class AuthService {
     public AuthService(
             UserRepository userRepository,
             RoleRepository roleRepository,
-            PasswordEncoder encoder,
+            PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager,
             JwtService jwtService,
             RefreshTokenRepository refreshTokenRepository,
             RefreshTokenGenerator refreshTokenGenerator
     ) {
-
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.encoder = encoder;
+        this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -48,16 +49,25 @@ public class AuthService {
     }
 
     @Transactional
-    public RegisterResponse register(RegisterRequest dto) throws Exception {
+    public RegisterResponse register(RegisterRequest dto)
+            throws Exception {
 
-        // treatment exception
-        if(userRepository.existsByEmail(dto.email())) throw new Exception();
+        if (userRepository.existsByEmail(dto.email())) {
+            throw new Exception();
+        }
 
-        Role customerRole = roleRepository.findByName("CUSTOMER").orElseThrow(Exception::new);
+        Role customerRole = roleRepository
+                .findByName("CUSTOMER")
+                .orElseThrow(Exception::new);
 
-        String hashedPassword = encoder.encode(dto.password());
+        String hashedPassword =
+                passwordEncoder.encode(dto.password());
 
-        User user = new User(dto.email(), hashedPassword, dto.username());
+        User user = new User(
+                dto.email(),
+                hashedPassword,
+                dto.username()
+        );
 
         user.addRole(customerRole);
 
@@ -71,17 +81,33 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponse login(LoginRequest dto) throws Exception {
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(dto.email(), dto.password()));
+    public LoginResponse login(LoginRequest dto)
+            throws Exception {
+
+        Authentication authentication =
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                dto.email(),
+                                dto.password()
+                        )
+                );
 
         User user = (User) authentication.getPrincipal();
 
-        String accessToken = jwtService.generateAccessToken(user);
+        String accessToken =
+                jwtService.generateAccessToken(user);
 
-        String refreshTokenValue = refreshTokenGenerator.generate();
+        String refreshTokenValue =
+                refreshTokenGenerator.generate();
 
-        RefreshToken refreshToken = new RefreshToken(refreshTokenValue, user, Instant.now().plus(30, ChronoUnit.DAYS));
+        RefreshToken refreshToken = new RefreshToken(
+                refreshTokenValue,
+                user,
+                Instant.now().plus(
+                        REFRESH_TOKEN_EXPIRATION_DAYS,
+                        ChronoUnit.DAYS
+                )
+        );
 
         refreshTokenRepository.save(refreshToken);
 
@@ -92,31 +118,56 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponse refresh(RefreshRequest dto) throws Exception {
+    public LoginResponse refresh(RefreshRequest dto)
+            throws Exception {
 
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(dto.refreshToken()).orElseThrow(Exception::new);
+        RefreshToken refreshToken =
+                refreshTokenRepository
+                        .findByToken(dto.refreshToken())
+                        .orElseThrow(Exception::new);
 
-        if(refreshToken.isExpired() || refreshToken.isRevoked()) throw new Exception();
+        if (refreshToken.isExpired()
+                || refreshToken.isRevoked()) {
+
+            throw new Exception();
+        }
 
         User user = refreshToken.getUser();
 
-        if (!user.isEnabled()) throw new Exception();
+        if (!user.isEnabled()) {
+            throw new Exception();
+        }
 
         refreshToken.revoke();
 
-        String newAcessToken = jwtService.generateAccessToken(user);
+        String newAccessToken =
+                jwtService.generateAccessToken(user);
 
-        String newRefreshTokenValue = refreshTokenGenerator.generate();
+        String newRefreshTokenValue =
+                refreshTokenGenerator.generate();
 
-        RefreshToken newRefreshToken = new RefreshToken(newRefreshTokenValue, user, Instant.now().plus(30, ChronoUnit.DAYS));
+        RefreshToken newRefreshToken = new RefreshToken(
+                newRefreshTokenValue,
+                user,
+                Instant.now().plus(
+                        REFRESH_TOKEN_EXPIRATION_DAYS,
+                        ChronoUnit.DAYS
+                )
+        );
 
         refreshTokenRepository.save(newRefreshToken);
 
-        return new LoginResponse(newAcessToken, newRefreshTokenValue);
+        return new LoginResponse(
+                newAccessToken,
+                newRefreshTokenValue
+        );
     }
 
     @Transactional
     public void logout(String token) {
-        refreshTokenRepository.findByToken(token).ifPresent(RefreshToken::revoke);
+
+        refreshTokenRepository
+                .findByToken(token)
+                .ifPresent(RefreshToken::revoke);
     }
 }

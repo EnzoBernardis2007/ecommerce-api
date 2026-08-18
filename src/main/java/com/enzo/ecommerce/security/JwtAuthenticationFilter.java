@@ -6,6 +6,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,10 +22,13 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final TokenService tokenService;
+    private static final Logger log =
+            LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
-    public JwtAuthenticationFilter(TokenService tokenService) {
-        this.tokenService = tokenService;
+    private final JwtService jwtService;
+
+    public JwtAuthenticationFilter(JwtService jwtService) {
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -36,8 +41,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = recoverToken(request);
 
         if (token != null) {
+
             try {
-                Claims claims = tokenService.validateAndGetClaims(token);
+
+                Claims claims = jwtService.validateAndGetClaims(token);
 
                 String email = claims.getSubject();
 
@@ -49,11 +56,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .map(SimpleGrantedAuthority::new)
                         .toList();
 
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        email,
-                        null,
-                        authorities
-                );
+                var authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                email,
+                                null,
+                                authorities
+                        );
 
                 authentication.setDetails(
                         new WebAuthenticationDetailsSource()
@@ -65,7 +73,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .setAuthentication(authentication);
 
             } catch (JwtException | IllegalArgumentException e) {
+
                 SecurityContextHolder.clearContext();
+
+                log.warn(
+                        "JWT inválido: {} - {}",
+                        e.getClass().getSimpleName(),
+                        e.getMessage()
+                );
             }
         }
 
@@ -76,10 +91,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null) {
             return null;
         }
 
-        return authHeader.substring(7).trim();
+        if (!authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+
+        String token = authHeader.substring(7).trim();
+
+        return token.isBlank() ? null : token;
     }
 }

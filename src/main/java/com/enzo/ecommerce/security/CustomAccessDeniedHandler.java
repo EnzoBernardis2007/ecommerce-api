@@ -15,7 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class CustomAccessDeniedHandler implements AccessDeniedHandler {
+public class CustomAccessDeniedHandler
+        implements AccessDeniedHandler {
 
     private final ObjectMapper objectMapper;
 
@@ -30,17 +31,28 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
             AccessDeniedException accessDeniedException
     ) throws IOException, ServletException {
 
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setContentType(
+                MediaType.APPLICATION_JSON_VALUE
+        );
 
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setStatus(
+                HttpServletResponse.SC_FORBIDDEN
+        );
 
         Map<String, Object> body = new HashMap<>();
+
         body.put("timestamp", Instant.now().toString());
         body.put("status", HttpServletResponse.SC_FORBIDDEN);
         body.put("error", "Forbidden");
-        body.put("message", "Acesso negado. Você não possui permissão para acessar este recurso.");
+        body.put(
+                "message",
+                "Acesso negado. Você não possui permissão para acessar este recurso."
+        );
         body.put("path", request.getServletPath());
 
-        objectMapper.writeValue(response.getOutputStream(), body);
+        objectMapper.writeValue(
+                response.getOutputStream(),
+                body
+        );
     }
 }
