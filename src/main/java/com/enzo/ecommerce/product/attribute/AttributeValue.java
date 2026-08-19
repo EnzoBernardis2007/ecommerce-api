@@ -1,4 +1,4 @@
-package com.enzo.ecommerce.product.category;
+package com.enzo.ecommerce.product.attribute;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,36 +12,32 @@ import java.util.*;
 
 @Entity
 @Table(
-        name = "categories",
+        name = "attribute_values",
         indexes = {
                 @Index(
-                        name = "idx_categories_parent_id",
-                        columnList = "parent_id"
+                        name = "idx_attribute_values_attribute_id",
+                        columnList = "attribute_id"
                 ),
                 @Index(
-                        name = "idx_categories_active",
+                        name = "idx_attribute_values_active",
                         columnList = "active"
-                ),
-                @Index(
-                        name = "idx_categories_slug",
-                        columnList = "slug"
                 )
         },
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uq_categories_name",
-                        columnNames = "name"
+                        name = "uq_attribute_values_attribute_value",
+                        columnNames = {"attribute_id", "value"}
                 ),
                 @UniqueConstraint(
-                        name = "uq_categories_slug",
-                        columnNames = "slug"
+                        name = "uq_attribute_values_attribute_slug",
+                        columnNames = {"attribute_id", "slug"}
                 )
         }
 )
 @Getter
 @Setter
 @NoArgsConstructor
-public class Category {
+public class AttributeValue {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -53,12 +49,22 @@ public class Category {
     )
     private UUID id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "attribute_id",
+            nullable = false,
+            foreignKey = @ForeignKey(
+                    name = "fk_attribute_values_attribute"
+            )
+    )
+    private ProductAttribute attribute;
+
     @Column(
-            name = "name",
+            name = "value",
             nullable = false,
             length = 100
     )
-    private String name;
+    private String value;
 
     @Column(
             name = "slug",
@@ -68,31 +74,16 @@ public class Category {
     private String slug;
 
     @Column(
-            name = "description",
-            length = 500
-    )
-    private String description;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "parent_id",
-            foreignKey = @ForeignKey(
-                    name = "fk_categories_parent"
-            )
-    )
-    private Category parent;
-
-    @OneToMany(mappedBy = "parent")
-    private Set<Category> children = new HashSet<>();
-
-    @OneToMany(mappedBy = "category")
-    private Set<ProductCategory> productCategories = new HashSet<>();
-
-    @Column(
             name = "active",
             nullable = false
     )
     private boolean active = true;
+
+    @OneToMany(
+            mappedBy = "attributeValue"
+    )
+    private Set<ProductVariantAttributeValue> variants =
+            new HashSet<>();
 
     @Column(
             name = "created_at",
