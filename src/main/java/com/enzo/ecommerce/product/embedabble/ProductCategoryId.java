@@ -1,4 +1,4 @@
-package com.enzo.ecommerce.product.attribute;
+package com.enzo.ecommerce.product.embedabble;
 
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
@@ -18,12 +18,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
-public class ProductVariantAttributeValueId
-    implements Serializable {
+public class ProductCategoryId implements Serializable {
 
     @JdbcTypeCode(SqlTypes.BINARY)
-    private UUID variantId;
+    private UUID productId;
 
     @JdbcTypeCode(SqlTypes.BINARY)
-    private UUID attributeValueId;
+    private UUID categoryId;
 }

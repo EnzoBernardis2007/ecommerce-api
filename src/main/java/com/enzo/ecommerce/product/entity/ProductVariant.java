@@ -1,10 +1,6 @@
-package com.enzo.ecommerce.product.variant;
+package com.enzo.ecommerce.product.entity;
 
-import com.enzo.ecommerce.product.attribute.AttributeValue;
-import com.enzo.ecommerce.product.attribute.ProductVariantAttributeValue;
-import com.enzo.ecommerce.product.attribute.ProductVariantAttributeValueId;
-import com.enzo.ecommerce.product.entity.Product;
-import com.enzo.ecommerce.product.inventory.Inventory;
+import com.enzo.ecommerce.product.embedabble.ProductVariantAttributeValueId;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

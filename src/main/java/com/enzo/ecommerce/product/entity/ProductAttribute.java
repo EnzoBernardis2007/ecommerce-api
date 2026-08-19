@@ -1,38 +1,39 @@
-package com.enzo.ecommerce.product.inventory;
+package com.enzo.ecommerce.product.entity;
 
-import com.enzo.ecommerce.product.variant.ProductVariant;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Table(
-    name = "inventories",
+    name = "product_attributes",
     indexes = {
         @Index(
-            name = "idx_inventories_variant_id",
-            columnList = "variant_id"
-        ),
-        @Index(
-            name = "idx_inventories_quantity",
-            columnList = "quantity"
+            name = "idx_product_attributes_active",
+            columnList = "active"
         )
     },
     uniqueConstraints = {
         @UniqueConstraint(
-            name = "uq_inventories_variant",
-            columnNames = "variant_id"
+            name = "uq_product_attributes_name",
+            columnNames = "name"
+        ),
+        @UniqueConstraint(
+            name = "uq_product_attributes_slug",
+            columnNames = "slug"
         )
     }
 )
 @Getter
 @Setter
 @NoArgsConstructor
-public class Inventory {
+public class ProductAttribute {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -44,33 +45,32 @@ public class Inventory {
     )
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-        name = "variant_id",
+    @Column(
+        name = "name",
         nullable = false,
-        foreignKey = @ForeignKey(
-            name = "fk_inventories_variant"
-        )
+        length = 100
     )
-    private ProductVariant variant;
+    private String name;
 
     @Column(
-        name = "quantity",
-        nullable = false
+        name = "slug",
+        nullable = false,
+        length = 120
     )
-    private Integer quantity = 0;
+    private String slug;
 
     @Column(
-        name = "reserved_quantity",
+        name = "active",
         nullable = false
     )
-    private Integer reservedQuantity = 0;
+    private boolean active = true;
 
-    @Column(
-        name = "reorder_level",
-        nullable = false
+    @OneToMany(
+        mappedBy = "attribute",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
     )
-    private Integer reorderLevel = 0;
+    private List<AttributeValue> values = new ArrayList<>();
 
     @Column(
         name = "created_at",
@@ -96,5 +96,15 @@ public class Inventory {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = Instant.now();
+    }
+
+    public void addValue(AttributeValue value) {
+        values.add(value);
+        value.setAttribute(this);
+    }
+
+    public void removeValue(AttributeValue value) {
+        values.remove(value);
+        value.setAttribute(null);
     }
 }

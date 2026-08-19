@@ -1,12 +1,7 @@
 package com.enzo.ecommerce.product.entity;
 
 import com.enzo.ecommerce.product.ProductStatus;
-import com.enzo.ecommerce.product.brand.Brand;
-import com.enzo.ecommerce.product.category.Category;
-import com.enzo.ecommerce.product.category.ProductCategory;
-import com.enzo.ecommerce.product.category.ProductCategoryId;
-import com.enzo.ecommerce.product.image.ProductImage;
-import com.enzo.ecommerce.product.variant.ProductVariant;
+import com.enzo.ecommerce.product.embedabble.ProductCategoryId;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

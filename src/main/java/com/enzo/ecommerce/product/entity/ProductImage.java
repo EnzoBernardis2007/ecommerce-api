@@ -1,6 +1,5 @@
-package com.enzo.ecommerce.product.image;
+package com.enzo.ecommerce.product.entity;
 
-import com.enzo.ecommerce.product.entity.Product;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

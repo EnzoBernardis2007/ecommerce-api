@@ -1,6 +1,6 @@
-package com.enzo.ecommerce.product.category;
+package com.enzo.ecommerce.product.entity;
 
-import com.enzo.ecommerce.product.entity.Product;
+import com.enzo.ecommerce.product.embedabble.ProductCategoryId;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

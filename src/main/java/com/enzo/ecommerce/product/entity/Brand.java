@@ -1,4 +1,4 @@
-package com.enzo.ecommerce.product.brand;
+package com.enzo.ecommerce.product.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
