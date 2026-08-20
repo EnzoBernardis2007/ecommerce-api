@@ -115,7 +115,8 @@ public class ProductVariant {
     @OneToMany(
             mappedBy = "variant",
             cascade = CascadeType.ALL,
-            orphanRemoval = true
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
     )
     private Set<ProductVariantAttributeValue> attributeValues =
             new HashSet<>();

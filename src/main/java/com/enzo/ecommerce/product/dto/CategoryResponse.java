@@ -1,5 +1,7 @@
 package com.enzo.ecommerce.product.dto;
 
+import com.enzo.ecommerce.product.entity.Category;
+
 import java.util.UUID;
 
 public record CategoryResponse(
@@ -7,4 +9,11 @@ public record CategoryResponse(
         String name,
         String slug
 ) {
+    public static CategoryResponse from(Category category) {
+        return new CategoryResponse(
+                category.getId(),
+                category.getName(),
+                category.getSlug()
+        );
+    }
 }
