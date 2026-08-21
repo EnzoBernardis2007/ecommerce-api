@@ -9,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -34,21 +35,14 @@ public class ProductService {
         return productRepository.findAllSummary(pageable);
     }
 
-    public ProductResponse findById(String id) throws Exception {
+    @Transactional(readOnly = true)
+    public ProductResponse findById(UUID id) throws Exception {
+        // 1. Loads base entity into Persistence Context (1st-level cache)
+        Product product = productRepository.findByIdWithBaseDetails(id)
+                .orElseThrow(() -> new Exception("Produto não encontrado"));
 
-        UUID productId;
-
-        try {
-            productId = UUID.fromString(id);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid product ID: " + id);
-        }
-
-        Product product = productRepository
-                .findByIdWithDetails(productId)
-                .orElseThrow(() ->
-                        new Exception(String.valueOf(productId))
-                );
+        // 2. Hydrates 'product.variants' in-memory; avoids Cartesian Product (requires @Transactional)
+        productRepository.fetchVariantsWithDetailsByProductId(id);
 
         return ProductResponse.from(product);
     }

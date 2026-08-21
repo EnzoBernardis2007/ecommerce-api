@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("api/v1/products")
 @RequiredArgsConstructor
@@ -29,7 +31,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> findById(@PathVariable String id) throws Exception {
+    public ResponseEntity<ProductResponse> findById(@PathVariable UUID id) throws Exception {
         return ResponseEntity.ok(productService.findById(id));
     }
 
