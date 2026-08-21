@@ -3,6 +3,7 @@ package com.enzo.ecommerce.product;
 import com.enzo.ecommerce.product.dto.ProductResponse;
 import com.enzo.ecommerce.product.dto.ProductSummaryResponse;
 import com.enzo.ecommerce.product.entity.Product;
+import com.enzo.ecommerce.product.exception.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,10 +37,11 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public ProductResponse findById(UUID id) throws Exception {
+    public ProductResponse findById(UUID id) {
+
         // 1. Loads base entity into Persistence Context (1st-level cache)
         Product product = productRepository.findByIdWithBaseDetails(id)
-                .orElseThrow(() -> new Exception("Produto não encontrado"));
+                .orElseThrow(() -> new ProductNotFoundException("id"));
 
         // 2. Hydrates 'product.variants' in-memory; avoids Cartesian Product (requires @Transactional)
         productRepository.fetchVariantsWithDetailsByProductId(id);

@@ -68,7 +68,7 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {
-        return username -> userRepository.findByEmail(username)
+        return username -> userRepository.findByEmailAndActiveTrueAndDeletedAtIsNull(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 

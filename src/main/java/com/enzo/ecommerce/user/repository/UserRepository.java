@@ -3,7 +3,6 @@ package com.enzo.ecommerce.user.repository;
 import com.enzo.ecommerce.user.entity.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -14,7 +13,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
             "roles",
             "roles.role"
     })
-    Optional<User> findByEmail(String email);
+    Optional<User> findByEmailAndActiveTrueAndDeletedAtIsNull(String email);
 
-    boolean existsByEmail(String email);
+    boolean existsByEmailAndActiveTrueAndDeletedAtIsNull(String email);
 }

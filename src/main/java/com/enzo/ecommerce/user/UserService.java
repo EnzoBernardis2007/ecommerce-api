@@ -4,6 +4,9 @@ import com.enzo.ecommerce.user.dto.MeResponse;
 import com.enzo.ecommerce.user.dto.UserCreatedDto;
 import com.enzo.ecommerce.user.entity.Role;
 import com.enzo.ecommerce.user.entity.User;
+import com.enzo.ecommerce.user.exception.EmailAlreadyExistsException;
+import com.enzo.ecommerce.user.exception.RoleNotFoundException;
+import com.enzo.ecommerce.user.exception.UserNotFoundException;
 import com.enzo.ecommerce.user.repository.RoleRepository;
 import com.enzo.ecommerce.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,12 +34,12 @@ public class UserService {
 
     @Transactional
     public UserCreatedDto createCustomer(String email, String rawPassword, String displayName) throws Exception {
-        if (userRepository.existsByEmail(email)) {
-            throw new Exception("Email já cadastrado");
+        if (userRepository.existsByEmailAndActiveTrueAndDeletedAtIsNull(email)) {
+            throw new EmailAlreadyExistsException(email);
         }
 
         Role customerRole = roleRepository.findByName("CUSTOMER")
-                .orElseThrow(Exception::new);
+                .orElseThrow(() -> new RoleNotFoundException("name", "CUSTOMER"));
 
         String hashedPassword = passwordEncoder.encode(rawPassword);
 
@@ -54,8 +57,8 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public MeResponse findMe(String email) throws Exception {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(Exception::new);
+        User user = userRepository.findByEmailAndActiveTrueAndDeletedAtIsNull(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
 
         var roles = user.getRoles()
                 .stream()
